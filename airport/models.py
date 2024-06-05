@@ -32,9 +32,9 @@ class Crew(models.Model):
 class Flight(models.Model):
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
-    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="route_flights")
-    airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE, related_name="airplane_flights")
-    crew = models.ManyToManyField(Crew, related_name="crew_flights")
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="flights")
+    airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE, related_name="flights")
+    crew = models.ManyToManyField(Crew, related_name="flights")
 
 
 class Order(models.Model):
@@ -45,6 +45,6 @@ class Order(models.Model):
 class Ticket(models.Model):
     row = models.IntegerField()
     seat = models.IntegerField()
-    flight = models.ForeignKey(Flight, on_delete=models.CASCADE, related_name="flight_tickets")
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="order_tickets")
+    flight = models.ForeignKey(Flight, on_delete=models.CASCADE, related_name="tickets")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
 
