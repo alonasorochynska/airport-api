@@ -52,7 +52,7 @@ class Flight(models.Model):
     crew = models.ManyToManyField(Crew, related_name="flights")
 
     def __str__(self):
-        return str(self.route)
+        return str(self.id)
 
 
 class Order(models.Model):
@@ -60,7 +60,7 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.user)
+        return str(self.id)
 
 
 class Ticket(models.Model):
@@ -70,4 +70,4 @@ class Ticket(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
 
     def __str__(self):
-        return f"{self.flight}, row: {self.row}, seat: {self.seat}"
+        return f"row: {self.row}, seat: {self.seat}"
