@@ -8,6 +8,11 @@ class Airport(models.Model):
     name = models.CharField(max_length=255)
     closest_big_city = models.CharField(max_length=255)
 
+    def save(self, *args, **kwargs):
+        if Airport.objects.filter(name=self.name).exists():
+            raise ValidationError("This airport already exists.")
+        super(Airport, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -21,7 +26,7 @@ class Route(models.Model):
         if self.source == self.destination:
             raise ValidationError("Source and destination airports must be different")
 
-        if Route.objects.filter(source=self.source, destination=self.destination).exists():
+        if Route.objects.filter(distance=self.distance, source=self.source, destination=self.destination).exists():
             raise ValidationError("Route with these details already exists.")
 
         super(Route, self).save(*args, **kwargs)
