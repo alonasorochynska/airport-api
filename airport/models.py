@@ -38,6 +38,11 @@ class Route(models.Model):
 class AirplaneType(models.Model):
     name = models.CharField(max_length=255)
 
+    def save(self, *args, **kwargs):
+        if AirplaneType.objects.filter(name=self.name).exists():
+            raise ValidationError("This type of airplane already exists.")
+        super(AirplaneType, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -69,6 +74,11 @@ class Crew(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def save(self, *args, **kwargs):
+        if Crew.objects.filter(first_name=self.first_name, last_name=self.last_name).exists():
+            raise ValidationError("This crew member already exists.")
+        super(Crew, self).save(*args, **kwargs)
 
 
 class Flight(models.Model):
