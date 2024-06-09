@@ -22,6 +22,10 @@ class Route(models.Model):
     source = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="source_routes")
     destination = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="destination_routes")
 
+    @property
+    def get_names_of_airports(self) -> str:
+        return f"{self.source} -> {self.destination}"
+
     def save(self, *args, **kwargs):
         if self.source == self.destination:
             raise ValidationError("Source and destination airports must be different")
