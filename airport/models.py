@@ -98,10 +98,15 @@ class Flight(models.Model):
         return f"{self.format_time(self.departure_time)} -> {self.format_time(self.arrival_time)}"
 
     def save(self, *args, **kwargs):
-        if self.arrival_time <= self.departure_time:
+        if self.arrival_time == self.departure_time:
             raise ValidationError("Arrival time must be after departure time.")
-        if Flight.objects.filter(route=self.route, airplane=self.airplane, departure_time=self.departure_time).exists():
+
+        if (not self.pk or Flight.objects.filter(route=self.route,
+                                                 airplane=self.airplane,
+                                                 departure_time=self.departure_time)
+                .exclude(pk=self.pk).exists()):
             raise ValidationError("Flight with these details already exists.")
+
         super(Flight, self).save(*args, **kwargs)
 
 
