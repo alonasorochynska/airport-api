@@ -101,13 +101,21 @@ class Flight(models.Model):
         if self.arrival_time == self.departure_time:
             raise ValidationError("Arrival time must be after departure time.")
 
-        if (not self.pk or Flight.objects.filter(route=self.route,
-                                                 airplane=self.airplane,
-                                                 departure_time=self.departure_time)
-                .exclude(pk=self.pk).exists()):
+        if Flight.objects.filter(
+                route=self.route,
+                airplane=self.airplane,
+                departure_time=self.departure_time
+        ).exists():
             raise ValidationError("Flight with these details already exists.")
-
         super(Flight, self).save(*args, **kwargs)
+
+        if self.pk:
+            crew_ids = self.crew.values_list("id", flat=True)
+            if Flight.objects.filter(route=self.route,
+                                     airplane=self.airplane,
+                                     departure_time=self.departure_time,
+                                     crew__in=crew_ids).exists():
+                raise ValidationError("Flight with these details and crew already exists.")
 
 
 class Order(models.Model):
