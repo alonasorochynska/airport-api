@@ -75,6 +75,10 @@ class Crew(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
     def save(self, *args, **kwargs):
         if Crew.objects.filter(first_name=self.first_name, last_name=self.last_name).exists():
             raise ValidationError("This crew member already exists.")
