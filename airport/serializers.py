@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 from airport.models import AirplaneType, Airplane, Airport, Route, Crew, Flight, Order, Ticket
 
@@ -10,12 +11,18 @@ class AirportSerializer(serializers.ModelSerializer):
 
 
 class RouteSerializer(serializers.ModelSerializer):
-    source = serializers.CharField(source="source.name", read_only=True)
-    destination = serializers.CharField(source="destination.name", read_only=True)
+    source = serializers.PrimaryKeyRelatedField(queryset=Airport.objects.all())
+    destination = serializers.PrimaryKeyRelatedField(queryset=Airport.objects.all())
 
     class Meta:
         model = Route
         fields = ["id", "distance", "source", "destination"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["source"] = instance.source.closest_big_city
+        representation["destination"] = instance.destination.closest_big_city
+        return representation
 
 
 class AirplaneTypeSerializer(serializers.ModelSerializer):
@@ -25,11 +32,19 @@ class AirplaneTypeSerializer(serializers.ModelSerializer):
 
 
 class AirplaneSerializer(serializers.ModelSerializer):
-    airplane_type = serializers.CharField(source="airplane_type.name")
+    airplane_type = serializers.PrimaryKeyRelatedField(queryset=AirplaneType.objects.all())
 
     class Meta:
         model = Airplane
         fields = ["id", "name", "rows", "seats_in_row", "airplane_type"]
+
+    def create(self, validated_data):
+        return Airplane.objects.create(**validated_data)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["airplane_type"] = instance.airplane_type.name
+        return representation
 
 
 class CrewSerializer(serializers.ModelSerializer):
@@ -39,16 +54,25 @@ class CrewSerializer(serializers.ModelSerializer):
 
 
 class FlightSerializer(serializers.ModelSerializer):
-    route = serializers.CharField(read_only=True)
-    airplane = serializers.CharField(read_only=True)
+    route = serializers.PrimaryKeyRelatedField(
+        queryset=Route.objects.select_related("source", "destination")
+    )
+    airplane = serializers.PrimaryKeyRelatedField(queryset=Airplane.objects.all())
+    crew = serializers.PrimaryKeyRelatedField(queryset=Crew.objects.all(), many=True)
 
     class Meta:
         model = Flight
         fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew"]
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["route"] = instance.route.get_names_of_airports
+        representation["airplane"] = instance.airplane.name
+        return representation
+
 
 class FlightListSerializer(FlightSerializer):
-    crew = serializers.SlugRelatedField(many=True, read_only=True, slug_field="first_name")
+    crew = serializers.SlugRelatedField(many=True, read_only=True, slug_field="full_name")
 
 
 class FlightDetailSerializer(FlightSerializer):
@@ -60,6 +84,10 @@ class TicketSerializer(serializers.ModelSerializer):
         model = Ticket
         fields = ["id", "row", "seat", "order", "flight"]
 
+    def create(self, validated_data):
+        with transaction.atomic():
+            return Ticket.objects.create(**validated_data)
+
 
 class TicketListSerializer(TicketSerializer):
     flight = serializers.CharField(read_only=True)
@@ -69,14 +97,15 @@ class TicketDetailSerializer(TicketSerializer):
     flight = FlightDetailSerializer(read_only=True)
 
 
-class TicketSummarySerializer(serializers.ModelSerializer):
+class OrderListTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
-        fields = ["id", "row", "seat"]
+        fields = ["id", "get_place"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
     user = serializers.CharField(read_only=True)
+    tickets = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.all(), many=True)
 
     class Meta:
         model = Order
@@ -84,8 +113,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderListSerializer(OrderSerializer):
-    tickets = TicketSummarySerializer(many=True, read_only=True)
+    tickets = OrderListTicketSerializer(many=True, read_only=True)
 
 
-class OrderDetailSerializer(OrderSerializer):
-    tickets = TicketListSerializer(many=True, read_only=True)
