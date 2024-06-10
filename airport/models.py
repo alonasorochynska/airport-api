@@ -63,6 +63,10 @@ class Airplane(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def capacity(self):
+        return self.rows * self.seats_in_row
+
     def save(self, *args, **kwargs):
         if (Airplane.objects.filter(name=self.name, rows=self.rows,
                                     seats_in_row=self.seats_in_row,
