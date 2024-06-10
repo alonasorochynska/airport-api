@@ -1,5 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 from airport.models import AirplaneType, Airplane, Airport, Route, Crew, Flight, Order, Ticket
 
 
@@ -36,7 +38,7 @@ class AirplaneSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Airplane
-        fields = ["id", "name", "rows", "seats_in_row", "airplane_type"]
+        fields = ["id", "name", "rows", "seats_in_row", "capacity", "airplane_type"]
 
     def create(self, validated_data):
         return Airplane.objects.create(**validated_data)
@@ -83,6 +85,16 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = ["id", "row", "seat", "order", "flight"]
+
+    def validate(self, attrs):
+        data = super(TicketSerializer, self).validate(attrs=attrs)
+        Ticket.validate_ticket(
+            attrs["row"],
+            attrs["seat"],
+            attrs["flight"].airplane,
+            ValidationError,
+        )
+        return data
 
     def create(self, validated_data):
         with transaction.atomic():
