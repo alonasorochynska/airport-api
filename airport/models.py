@@ -147,6 +147,10 @@ class Ticket(models.Model):
     def __str__(self):
         return f"row: {self.row}, seat: {self.seat}"
 
+    @property
+    def get_place(self):
+        return f"row: {self.row}, seat: {self.seat}"
+
     @staticmethod
     def validate_ticket(row, seat, airplane, error_to_raise):
         for ticket_attr_value, ticket_attr_name, airplane_attr_name in [
