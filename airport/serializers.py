@@ -116,7 +116,6 @@ class OrderListTicketSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(read_only=True)
     tickets = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.all(), many=True)
 
     class Meta:
