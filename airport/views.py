@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from airport.models import (
@@ -73,11 +74,15 @@ class OrderViewSet(viewsets.ModelViewSet):
                 .prefetch_related("tickets__flight__route__source",
                                   "tickets__flight__route__destination"))
     serializer_class = OrderSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
         if self.action == "list":
             return OrderListSerializer
-        #if self.action == "retrieve":
+        # if self.action == "retrieve":
         #    return TicketDetailSerializer
         return self.serializer_class
 
