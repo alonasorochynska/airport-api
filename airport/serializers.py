@@ -61,10 +61,13 @@ class FlightSerializer(serializers.ModelSerializer):
     )
     airplane = serializers.PrimaryKeyRelatedField(queryset=Airplane.objects.all())
     crew = serializers.PrimaryKeyRelatedField(queryset=Crew.objects.all(), many=True)
+    departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    # tickets_available = serializers.IntegerField()
 
     class Meta:
         model = Flight
-        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew"]
+        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew",]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -109,7 +112,7 @@ class TicketDetailSerializer(TicketSerializer):
     flight = FlightDetailSerializer(read_only=True)
 
 
-class OrderListTicketSerializer(serializers.ModelSerializer):
+class TicketPlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = ["id", "get_place"]
@@ -117,6 +120,7 @@ class OrderListTicketSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     tickets = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.all(), many=True)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
 
     class Meta:
         model = Order
@@ -124,6 +128,6 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderListSerializer(OrderSerializer):
-    tickets = OrderListTicketSerializer(many=True, read_only=True)
+    tickets = TicketPlaceSerializer(many=True, read_only=True)
 
 
