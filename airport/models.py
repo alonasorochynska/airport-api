@@ -109,26 +109,6 @@ class Flight(models.Model):
     def __str__(self):
         return f"{self.format_time(self.departure_time)} -> {self.format_time(self.arrival_time)}"
 
-    def save(self, *args, **kwargs):
-        if self.arrival_time == self.departure_time:
-            raise ValidationError("Arrival time must be after departure time.")
-
-        if Flight.objects.filter(
-                route=self.route,
-                airplane=self.airplane,
-                departure_time=self.departure_time
-        ).exists():
-            raise ValidationError("Flight with these details already exists.")
-        super(Flight, self).save(*args, **kwargs)
-
-        if self.pk:
-            crew_ids = self.crew.values_list("id", flat=True)
-            if Flight.objects.filter(route=self.route,
-                                     airplane=self.airplane,
-                                     departure_time=self.departure_time,
-                                     crew__in=crew_ids).exists():
-                raise ValidationError("Flight with these details and crew already exists.")
-
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
