@@ -39,9 +39,6 @@ class AirplaneSerializer(serializers.ModelSerializer):
         model = Airplane
         fields = ["id", "name", "rows", "seats_in_row", "capacity", "airplane_type"]
 
-    def create(self, validated_data):
-        return Airplane.objects.create(**validated_data)
-
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation["airplane_type"] = instance.airplane_type.name
@@ -69,11 +66,9 @@ class FlightSerializer(serializers.ModelSerializer):
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
 
-    # tickets_available = serializers.IntegerField()
-
     class Meta:
         model = Flight
-        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew", ]
+        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -110,10 +105,6 @@ class TicketSerializer(serializers.ModelSerializer):
         )
         return data
 
-    def create(self, validated_data):
-        with transaction.atomic():
-            return Ticket.objects.create(**validated_data)
-
 
 class TicketListSerializer(TicketSerializer):
     flight = serializers.CharField(read_only=True)
@@ -130,6 +121,14 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ["id", "created_at", "tickets"]
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            tickets_data = validated_data.pop("tickets")
+            order = Order.objects.create(**validated_data)
+            for ticket_data in tickets_data:
+                Ticket.objects.create(order=order, **ticket_data)
+            return order
 
 
 class OrderListSerializer(OrderSerializer):
