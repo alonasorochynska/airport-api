@@ -6,7 +6,6 @@ from airport.models import AirplaneType, Airplane, Airport, Route, Crew, Flight,
 
 
 class AirportSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Airport
         fields = ["id", "name", "closest_big_city"]
@@ -55,6 +54,12 @@ class CrewSerializer(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name"]
 
 
+class TicketPlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ["id", "get_place"]
+
+
 class FlightSerializer(serializers.ModelSerializer):
     route = serializers.PrimaryKeyRelatedField(
         queryset=Route.objects.select_related("source", "destination")
@@ -63,11 +68,12 @@ class FlightSerializer(serializers.ModelSerializer):
     crew = serializers.PrimaryKeyRelatedField(queryset=Crew.objects.all(), many=True)
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+
     # tickets_available = serializers.IntegerField()
 
     class Meta:
         model = Flight
-        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew",]
+        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew", ]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -82,6 +88,11 @@ class FlightListSerializer(FlightSerializer):
 
 class FlightDetailSerializer(FlightSerializer):
     crew = CrewSerializer(many=True, read_only=True)
+    taken_places = TicketPlaceSerializer(source="tickets", many=True, read_only=True)
+
+    class Meta:
+        model = Flight
+        fields = FlightSerializer.Meta.fields + ["taken_places",]
 
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -112,12 +123,6 @@ class TicketDetailSerializer(TicketSerializer):
     flight = FlightDetailSerializer(read_only=True)
 
 
-class TicketPlaceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ticket
-        fields = ["id", "get_place"]
-
-
 class OrderSerializer(serializers.ModelSerializer):
     tickets = serializers.PrimaryKeyRelatedField(queryset=Ticket.objects.all(), many=True)
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
@@ -129,5 +134,3 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(OrderSerializer):
     tickets = TicketPlaceSerializer(many=True, read_only=True)
-
-
