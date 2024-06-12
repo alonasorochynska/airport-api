@@ -1,6 +1,8 @@
 from django.db.models import F, Count
-from rest_framework import viewsets, mixins
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from airport.models import (
@@ -10,7 +12,7 @@ from airport.serializers import (
     AirportSerializer, RouteSerializer, AirplaneTypeSerializer, AirplaneSerializer,
     CrewSerializer, FlightSerializer, OrderSerializer, TicketSerializer,
     FlightListSerializer, FlightDetailSerializer, TicketListSerializer,
-    TicketDetailSerializer, OrderListSerializer
+    TicketDetailSerializer, OrderListSerializer, AirplaneImageSerializer
 )
 
 
@@ -32,6 +34,24 @@ class AirplaneTypeViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, Generi
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
+
+    def get_serializer_class(self):
+        if self.action == "upload_image":
+            return AirplaneImageSerializer
+        return self.serializer_class
+
+    @action(
+        methods=["POST"],
+        detail=True,
+        permission_classes=(IsAdminUser,),
+        url_path="upload-image",
+    )
+    def upload_image(self, request, pk=None):
+        movie = self.get_object()
+        serializer = self.get_serializer(movie, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CrewViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):

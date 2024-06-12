@@ -1,6 +1,9 @@
+import os
+import uuid
+
 from django.conf import settings
 from django.db import models
-from django.utils import timezone
+from django.utils.text import slugify
 from rest_framework.exceptions import ValidationError
 
 
@@ -51,11 +54,19 @@ class AirplaneType(models.Model):
         return self.name
 
 
+def airplane_image_file_path(instance, filename):
+    _, extension = os.path.splitext(filename)
+    filename = f"{slugify(instance.name)}-{uuid.uuid4()}{extension}"
+
+    return os.path.join("uploads/airplanes/", filename)
+
+
 class Airplane(models.Model):
     name = models.CharField(max_length=255)
     rows = models.IntegerField()
     seats_in_row = models.IntegerField()
     airplane_type = models.ForeignKey(AirplaneType, on_delete=models.CASCADE, related_name="airplanes")
+    image = models.ImageField(null=True, upload_to=airplane_image_file_path)
 
     class Meta:
         unique_together = ("name", "rows", "seats_in_row", "airplane_type",)
@@ -66,14 +77,6 @@ class Airplane(models.Model):
     @property
     def capacity(self):
         return self.rows * self.seats_in_row
-
-    def save(self, *args, **kwargs):
-        if (Airplane.objects.filter(name=self.name, rows=self.rows,
-                                    seats_in_row=self.seats_in_row,
-                                    airplane_type=self.airplane_type)
-                .exists()):
-            raise ValidationError("Airplane with these details already exists.")
-        super(Airplane, self).save(*args, **kwargs)
 
 
 class Crew(models.Model):

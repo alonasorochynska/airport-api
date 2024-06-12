@@ -32,12 +32,18 @@ class AirplaneTypeSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class AirplaneImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Airplane
+        fields = ("id", "image")
+
+
 class AirplaneSerializer(serializers.ModelSerializer):
     airplane_type = serializers.PrimaryKeyRelatedField(queryset=AirplaneType.objects.all())
 
     class Meta:
         model = Airplane
-        fields = ["id", "name", "rows", "seats_in_row", "capacity", "airplane_type"]
+        fields = ["id", "name", "rows", "seats_in_row", "capacity", "airplane_type", "capacity", "image"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
