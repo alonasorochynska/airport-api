@@ -1,3 +1,4 @@
+from django.db.models import F, Count
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -45,7 +46,11 @@ class FlightViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Flight.objects.select_related(
             "route__source", "route__destination", "airplane"
-        ).prefetch_related("crew")
+        ).prefetch_related("crew").annotate(
+            tickets_available=(
+                    F("airplane__rows") * F("airplane__seats_in_row") - Count("tickets")
+            )
+        )
         return queryset
 
     def get_serializer_class(self):

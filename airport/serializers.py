@@ -65,10 +65,11 @@ class FlightSerializer(serializers.ModelSerializer):
     crew = serializers.PrimaryKeyRelatedField(queryset=Crew.objects.all(), many=True)
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    tickets_available = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Flight
-        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew"]
+        fields = ["id", "departure_time", "arrival_time", "route", "airplane", "crew", "tickets_available"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
