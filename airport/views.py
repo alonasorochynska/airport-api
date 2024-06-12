@@ -1,7 +1,7 @@
 from django.db.models import F, Count
-from rest_framework import viewsets, status
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
 from airport.models import (
     Airport, AirplaneType, Crew, Flight, Order, Ticket, Airplane, Route
@@ -14,7 +14,7 @@ from airport.serializers import (
 )
 
 
-class AirportViewSet(viewsets.ModelViewSet):
+class AirportViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
 
@@ -24,7 +24,7 @@ class RouteViewSet(viewsets.ModelViewSet):
     serializer_class = RouteSerializer
 
 
-class AirplaneTypeViewSet(viewsets.ModelViewSet):
+class AirplaneTypeViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
 
@@ -34,7 +34,7 @@ class AirplaneViewSet(viewsets.ModelViewSet):
     serializer_class = AirplaneSerializer
 
 
-class CrewViewSet(viewsets.ModelViewSet):
+class CrewViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
 
@@ -61,10 +61,11 @@ class FlightViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
 
-class TicketViewSet(viewsets.ModelViewSet):
+class TicketViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = Ticket.objects.select_related("flight__route__source",
                                              "flight__route__destination")
     serializer_class = TicketSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -74,7 +75,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
     queryset = (Order.objects.select_related("user")
                 .prefetch_related("tickets__flight__route__source",
                                   "tickets__flight__route__destination"))
@@ -87,8 +88,6 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return OrderListSerializer
-        # if self.action == "retrieve":
-        #    return TicketDetailSerializer
         return self.serializer_class
 
     def perform_create(self, serializer):
