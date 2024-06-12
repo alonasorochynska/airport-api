@@ -1,4 +1,6 @@
 from django.db.models import F, Count
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -52,6 +54,25 @@ class AirplaneViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "airplane_type",
+                type=OpenApiTypes.INT,
+                description="Filter by airplane type "
+                            "id (ex. ?airplane_type=2)",
+            ),
+            OpenApiParameter(
+                "name",
+                type=OpenApiTypes.STR,
+                description="Filter by airplane name (ex. ?name=boeing)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Get list of airplanes"""
+        return super().list(request, *args, **kwargs)
 
 
 class CrewViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):

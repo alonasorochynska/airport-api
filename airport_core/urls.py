@@ -17,6 +17,7 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularSwaggerView, SpectacularRedocView, SpectacularAPIView
 
 from airport_core import settings
 
@@ -25,4 +26,7 @@ urlpatterns = [
     path("api/airport/", include("airport.urls", namespace="airport")),
     path("api/users/", include("users.urls", namespace="users")),
     path("__debug__/", include("debug_toolbar.urls")),
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path("api/doc/swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+    path("api/doc/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
