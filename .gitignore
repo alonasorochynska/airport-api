@@ -1,6 +1,7 @@
-.idea
-venv
+.idea/
+venv/
 db.sqlite3
-__pycache__
+__pycache__/
 airport_db_data.json
-media
+media/
+.env
