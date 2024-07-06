@@ -11,10 +11,20 @@ from airport.models import (
     Airport, AirplaneType, Crew, Flight, Order, Ticket, Airplane, Route
 )
 from airport.serializers import (
-    AirportSerializer, RouteSerializer, AirplaneTypeSerializer, AirplaneSerializer,
-    CrewSerializer, FlightSerializer, OrderSerializer, TicketSerializer,
-    FlightListSerializer, FlightDetailSerializer, TicketListSerializer,
-    TicketDetailSerializer, OrderListSerializer, AirplaneImageSerializer
+    AirportSerializer,
+    RouteSerializer,
+    AirplaneTypeSerializer,
+    AirplaneSerializer,
+    CrewSerializer,
+    FlightSerializer,
+    OrderSerializer,
+    TicketSerializer,
+    FlightListSerializer,
+    FlightDetailSerializer,
+    TicketListSerializer,
+    TicketDetailSerializer,
+    OrderListSerializer,
+    AirplaneImageSerializer
 )
 
 
