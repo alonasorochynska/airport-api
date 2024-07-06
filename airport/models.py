@@ -11,10 +11,10 @@ class Airport(models.Model):
     name = models.CharField(max_length=255)
     closest_big_city = models.CharField(max_length=255)
 
-    def save(self, *args, **kwargs):
-        if Airport.objects.filter(name=self.name).exists():
-            raise ValidationError("This airport already exists.")
-        super(Airport, self).save(*args, **kwargs)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["name"], name="unique_airport_name")
+        ]
 
     def __str__(self):
         return self.name
@@ -24,6 +24,11 @@ class Route(models.Model):
     distance = models.IntegerField()
     source = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="source_routes")
     destination = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="destination_routes")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["distance", "source", "destination"], name="unique_route")
+        ]
 
     @property
     def get_names_of_airports(self) -> str:
@@ -45,10 +50,10 @@ class Route(models.Model):
 class AirplaneType(models.Model):
     name = models.CharField(max_length=255)
 
-    def save(self, *args, **kwargs):
-        if AirplaneType.objects.filter(name=self.name).exists():
-            raise ValidationError("This type of airplane already exists.")
-        super(AirplaneType, self).save(*args, **kwargs)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["name"], name="unique_airplane_type_name")
+        ]
 
     def __str__(self):
         return self.name
@@ -69,7 +74,11 @@ class Airplane(models.Model):
     image = models.ImageField(null=True, upload_to=airplane_image_file_path)
 
     class Meta:
-        unique_together = ("name", "rows", "seats_in_row", "airplane_type",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "rows", "seats_in_row", "airplane_type"],
+                name="unique_airplane")
+        ]
 
     def __str__(self):
         return self.name
@@ -83,17 +92,17 @@ class Crew(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["first_name", "last_name"], name="unique_crew_member")
+        ]
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
-
-    def save(self, *args, **kwargs):
-        if Crew.objects.filter(first_name=self.first_name, last_name=self.last_name).exists():
-            raise ValidationError("This crew member already exists.")
-        super(Crew, self).save(*args, **kwargs)
 
 
 class Flight(models.Model):
@@ -115,7 +124,7 @@ class Flight(models.Model):
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
 
     def __str__(self):
         return str(self.id)
@@ -128,7 +137,9 @@ class Ticket(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
 
     class Meta:
-        unique_together = ("flight", "row", "seat")
+        constraints = [
+            models.UniqueConstraint(fields=["flight", "row", "seat"], name="unique_ticket")
+        ]
         ordering = ["row", "seat"]
 
     def __str__(self):
